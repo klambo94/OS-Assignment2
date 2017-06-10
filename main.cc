@@ -6,17 +6,18 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <assert.h>
+#include <iostream>
 
 void handler(int signalNum) {
 	switch(signalNum) {
 		case 1:
-			printf("Process: %d, Signal received: SIGHUP with signal number: %d\n", getpid(), signalNum);
+			std::cout << "Process: " << getpid() << " Signal received: SIGHUP with signal number: " <<signalNum << "\n";
 			break;
 		case 10:
-			printf("Process: %d, Signal received: SIGUSR1 with signal number: %d\n", getpid(), signalNum);
+			std::cout << "Process: " << getpid() << " Signal received: SIGUSR1 with signal number: " <<signalNum << "\n";
 			break;
 		case 29:
-			printf("Process: %d, Signal received: SIGIO with signal number: %d\n", getpid(), signalNum);
+			std::cout << "Process: " << getpid() << " Signal received: SIGIO with signal number: " <<signalNum << "\n";
 			break;
 		default:
 			printf("Process: %d, Unrecongized signal: %d\n", getpid(), signalNum);
@@ -54,20 +55,19 @@ int main(int argc, char *argv[]) {
 
 	if(proccessId != 0) {
 		printf("Parent PID: %d\n", getpid());
-		int waitReturn = waitpid(proccessId, &status, WCONTINUED);
+		pid_t waitReturn;
 		
-		if(waitReturn < 0) {
-			int err = errno;
-			if(errno == EINTR) {
-				while(errno == EINTR) {
-					waitReturn = waitpid(proccessId, &status, WCONTINUED);
-				}
-			}
+		// Talked with people on slack. 
+		// Casy Blanton put his waitpid code up on Slack 
+		// modified his to fit my code/style 
+		do {
+			waitReturn = waitpid(proccessId, &status, 0);
+		} while(waitReturn == -1 && errno == EINTR);
 
-			 if (errno != EINTR) {
-				perror("Error occured during waitpid");
-				exit(err);
-			}
+		if(waitReturn == -1) {
+			int err = errno;
+			perror("waitpid returned with error");
+			exit(err);
 		}
 
 		if(WIFEXITED(status)) {
@@ -85,6 +85,7 @@ int main(int argc, char *argv[]) {
 		int sleepTimeInSeconds = 5;
 
 		if(parnetPID > 0) {
+			printf("Process: %d sending signal %d\n", getpid(), 1);
 			int killReturn = kill(parnetPID, 1); 
 			if(killReturn != 0) {
 				int err = errno;
@@ -97,10 +98,11 @@ int main(int argc, char *argv[]) {
 				printf("sleep was inturruped with %d seconds left\n", sleepReturn);
 			}
 
+			printf("Process: %d sending signal %d\n", getpid(), 10);
 			killReturn = kill(parnetPID, 10); 
 			if(killReturn != 0) {
 				int err = errno;
-				perror("Second ill returned errors");
+				perror("Second kill returned errors");
 				exit(err);
 			}
 
@@ -109,6 +111,7 @@ int main(int argc, char *argv[]) {
 				printf("sleep was inturruped with %d seconds left\n", sleepReturn);
 			}
 
+			printf("Process: %d sending signal %d\n", getpid(), 29);
 			killReturn = kill(parnetPID, 29); 
 			if(killReturn != 0) {
 				int err = errno;
@@ -116,6 +119,7 @@ int main(int argc, char *argv[]) {
 				exit(err);
 			}
 
+			printf("Process: %d sending signal %d\n", getpid(), 29);
 			killReturn = kill(parnetPID, 29); 
 			if(killReturn != 0) {
 				int err = errno;
@@ -123,6 +127,7 @@ int main(int argc, char *argv[]) {
 				exit(err);
 			}
 
+			printf("Process: %d sending signal %d\n", getpid(), 29);
 			killReturn = kill(parnetPID, 29); 
 			if(killReturn != 0) {
 				int err = errno;
@@ -130,6 +135,7 @@ int main(int argc, char *argv[]) {
 				exit(err);
 			}
 		}
+		exit(EXIT_SUCCESS);
 	}
 
 	delete action1;
