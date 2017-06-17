@@ -6,21 +6,48 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <assert.h>
-#include <iostream>
+#include <string.h>
 
+//Used your write example on slack for my handler printing.
 void handler(int signalNum) {
+	int returnWrite;
+	const char *s;
 	switch(signalNum) {
 		case 1:
-			std::cout << "Process: " << getpid() << " Signal received: SIGHUP with signal number: " <<signalNum << "\n";
+			s = "Signal recieved from child: SIGHUP\n";
+			returnWrite = write(1, s, strlen(s));
+			if(returnWrite < 0) {
+				int err = errno;
+				perror("Write returned an error for SIGHUP");
+				exit(err);
+			}
 			break;
 		case 10:
-			std::cout << "Process: " << getpid() << " Signal received: SIGUSR1 with signal number: " <<signalNum << "\n";
+			s = "Signal recieved from child: SIGUSR1\n";
+			 returnWrite = write(1, s, strlen(s));
+			if(returnWrite < 0) {
+				int err = errno;
+				perror("Write returned an error for SIGUSR1");
+				exit(err);
+			}
 			break;
 		case 29:
-			std::cout << "Process: " << getpid() << " Signal received: SIGIO with signal number: " <<signalNum << "\n";
+			s = "Signal recieved from child: SIGIO\n";
+			returnWrite = write(1, s, strlen(s));
+			if(returnWrite < 0) {
+				int err = errno;
+				perror("Write returned an error for SIGIO\n");
+				exit(err);
+			}
 			break;
 		default:
-			printf("Process: %d, Unrecongized signal: %d\n", getpid(), signalNum);
+			s = "Signal recieved from child: UNKNOWN\n";
+			returnWrite = write(1, s, strlen(s));
+			if(returnWrite < 0) {
+				int err = errno;
+				perror("Write returned an error for UNKNOWN\n");
+				exit(err);
+			}
 			break;
 	}
 }
@@ -82,10 +109,9 @@ int main(int argc, char *argv[]) {
 	} else {
 		printf("Child PID: %d\n", getpid());
 		pid_t parnetPID = getppid();
-		int sleepTimeInSeconds = 5;
 
 		if(parnetPID > 0) {
-			printf("Process: %d sending signal %d\n", getpid(), 1);
+			printf("Process: %d sending signal SIGHUP\n", getpid());
 			int killReturn = kill(parnetPID, 1); 
 			if(killReturn != 0) {
 				int err = errno;
@@ -93,12 +119,7 @@ int main(int argc, char *argv[]) {
 				exit(err);
 			}
 
-			int sleepReturn = sleep(sleepTimeInSeconds);
-			if(sleepReturn != 0) {
-				printf("sleep was inturruped with %d seconds left\n", sleepReturn);
-			}
-
-			printf("Process: %d sending signal %d\n", getpid(), 10);
+			printf("Process: %d sending signal SIGUSR1\n", getpid());
 			killReturn = kill(parnetPID, 10); 
 			if(killReturn != 0) {
 				int err = errno;
@@ -106,12 +127,7 @@ int main(int argc, char *argv[]) {
 				exit(err);
 			}
 
-			sleepReturn = sleep(sleepTimeInSeconds);
-			if(sleepReturn != 0) {
-				printf("sleep was inturruped with %d seconds left\n", sleepReturn);
-			}
-
-			printf("Process: %d sending signal %d\n", getpid(), 29);
+			printf("Process: %d sending signal SIGIO\n", getpid());
 			killReturn = kill(parnetPID, 29); 
 			if(killReturn != 0) {
 				int err = errno;
@@ -119,7 +135,7 @@ int main(int argc, char *argv[]) {
 				exit(err);
 			}
 
-			printf("Process: %d sending signal %d\n", getpid(), 29);
+			printf("Process: %d sending signal SIGIO\n", getpid());
 			killReturn = kill(parnetPID, 29); 
 			if(killReturn != 0) {
 				int err = errno;
@@ -127,7 +143,7 @@ int main(int argc, char *argv[]) {
 				exit(err);
 			}
 
-			printf("Process: %d sending signal %d\n", getpid(), 29);
+			printf("Process: %d sending signal SIGIO\n", getpid());
 			killReturn = kill(parnetPID, 29); 
 			if(killReturn != 0) {
 				int err = errno;
